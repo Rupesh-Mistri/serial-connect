@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Standard USB Serial Vendor IDs -->
+    <usb-device vendor-id="1027" /> <!-- FTDI (0x0403) -->
+    <usb-device vendor-id="4292" /> <!-- Silicon Labs CP210x (0x10C4) -->
+    <usb-device vendor-id="1659" /> <!-- Prolific PL2303 (0x067B) -->
+    <usb-device vendor-id="6790" /> <!-- Qinheng CH340/CH341 (0x1A86) -->
+    <usb-device vendor-id="9025" /> <!-- Arduino / CDC ACM (0x2341) -->
+    <usb-device vendor-id="1155" /> <!-- STMicroelectronics / CDC ACM (0x0483) -->
+    <usb-device vendor-id="1655" /> <!-- Qinheng CH340 variants (0x0677) -->
+</resources>

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCU Connect - Web Serial USB Demo</title>
+  <style>
+    :root {
+      --bg-primary: #121212;
+      --bg-card: #1e1e1e;
+      --bg-input: #292929;
+      --accent: #1976d2;
+      --accent-hover: #1565c0;
+      --success: #00e676;
+      --error: #ff5252;
+      --warning: #ffb74d;
+      --text-main: #f0f0f0;
+      --text-muted: #9e9e9e;
+      --term-bg: #0d1117;
+      --term-rx: #00ff66;
+      --term-tx: #00e5ff;
+      --term-sys: #ffd600;
+      --border-color: #333333;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      padding: 12px;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    h1 {
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+    }
+
+    .badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .badge-disconnected {
+      background-color: rgba(255, 82, 82, 0.15);
+      color: var(--error);
+    }
+
+    .badge-disconnected .badge-dot {
+      background-color: var(--error);
+    }
+
+    .badge-connected {
+      background-color: rgba(0, 230, 118, 0.15);
+      color: var(--success);
+    }
+
+    .badge-connected .badge-dot {
+      background-color: var(--success);
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    .card-title {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .status-item {
+      background-color: var(--bg-input);
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+    .status-label {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .status-val {
+      font-weight: bold;
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    select,
+    input[type="text"] {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    select:focus,
+    input[type="text"]:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background-color 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.btn-danger {
+      background-color: #d32f2f;
+    }
+
+    button.btn-danger:hover {
+      background-color: #b71c1c;
+    }
+
+    button.btn-success {
+      background-color: #2e7d32;
+    }
+
+    button.btn-success:hover {
+      background-color: #1b5e20;
+    }
+
+    button.btn-secondary {
+      background-color: #424242;
+    }
+
+    button.btn-secondary:hover {
+      background-color: #616161;
+    }
+
+    button.btn-small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .send-box {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .send-box input {
+      flex: 1;
+      min-width: 0;
+      text-overflow: ellipsis;
+    }
+
+    .send-box select {
+      flex-shrink: 0;
+      padding: 7px 4px;
+    }
+
+    .send-box button {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .quick-cmds {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .terminal-container {
+      background-color: var(--term-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .terminal-toolbar {
+      background-color: #161b22;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 12px;
+    }
+
+    .terminal-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .terminal-screen {
+      height: 220px;
+      overflow-y: auto;
+      padding: 10px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-line {
+      margin-bottom: 3px;
+    }
+
+    .log-time {
+      color: #6e7681;
+      font-size: 10px;
+      margin-right: 5px;
+    }
+
+    .log-rx {
+      color: var(--term-rx);
+    }
+
+    .log-tx {
+      color: var(--term-tx);
+    }
+
+    .log-sys {
+      color: var(--term-sys);
+    }
+
+    .log-err {
+      color: var(--error);
+    }
+
+    .info-box {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .info-box code {
+      background-color: var(--bg-input);
+      color: #90caf9;
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>🔌 Web Serial USB Demo</h1>
+    <div id="connBadge" class="badge badge-disconnected">
+      <span class="badge-dot"></span>
+      <span id="connBadgeText">Disconnected</span>
+    </div>
+  </header>
+
+  <!-- Status Summary Card -->
+  <div class="card">
+    <div class="card-title">Device & Environment Status</div>
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="status-label">navigator.serial</div>
+        <div class="status-val" id="valWebSerial">Detecting...</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Native Bridge</div>
+        <div class="status-val" id="valBridge">Detecting...</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Baud Rate</div>
+        <div class="status-val" id="valBaud">115200</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Active Port</div>
+        <div class="status-val" id="valPortInfo">None</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Controls Card -->
+  <div class="card">
+    <div class="card-title">Serial Port Controls</div>
+    <div class="controls-row">
+      <label for="baudSelect" style="font-size:12px; color:var(--text-muted);">Baud:</label>
+      <select id="baudSelect">
+        <option value="9600">9600</option>
+        <option value="19200">19200</option>
+        <option value="38400">38400</option>
+        <option value="57600">57600</option>
+        <option value="115200" selected>115200</option>
+        <option value="230400">230400</option>
+        <option value="460800">460800</option>
+        <option value="921600">921600</option>
+      </select>
+
+      <button id="btnWebSerialConnect" class="btn-success">
+        ⚡ Request Port (Web Serial)
+      </button>
+
+      <button id="btnBridgeConnect">
+        🔌 Connect Bridge
+      </button>
+
+      <button id="btnDisconnect" class="btn-danger">
+        Disconnect
+      </button>
+    </div>
+  </div>
+
+  <!-- Command Sender Card -->
+  <div class="card">
+    <div class="card-title">Send Serial Data</div>
+    <div class="send-box">
+      <input type="text" id="inputCmd" placeholder="Type command (e.g. AT, PING)..." />
+      <select id="lineEndingSelect">
+        <option value="\r\n">CRLF (\r\n)</option>
+        <option value="\n" selected>LF (\n)</option>
+        <option value="\r">CR (\r)</option>
+        <option value="">None</option>
+      </select>
+      <button id="btnSend">Send</button>
+    </div>
+
+    <div class="quick-cmds">
+      <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Quick:</span>
+      <button class="btn-secondary btn-small" onclick="quickSend('PING')">PING</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('HELLO')">HELLO</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('STATUS')">STATUS</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('AT')">AT</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('LED ON')">LED ON</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('LED OFF')">LED OFF</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('1')">1</button>
+      <button class="btn-secondary btn-small" onclick="quickSend('0')">0</button>
+      <button class="btn-secondary btn-small" onclick="runEchoTest()">🧪 Echo Test</button>
+    </div>
+  </div>
+
+  <!-- Terminal Display Card -->
+  <div class="card">
+    <div class="card-title">
+      <span>Live Serial Monitor</span>
+      <span id="rxBytesCount" style="font-size:11px; text-transform:none; color:var(--text-muted);">0 lines</span>
+    </div>
+
+    <div class="terminal-container">
+      <div class="terminal-toolbar">
+        <div>
+          <label style="cursor: pointer;">
+            <input type="checkbox" id="chkAutoScroll" checked /> Auto-scroll
+          </label>
+          <label style="cursor: pointer; margin-left: 8px;">
+            <input type="checkbox" id="chkShowHex" /> Show HEX
+          </label>
+        </div>
+        <div class="terminal-actions">
+          <button class="btn-secondary btn-small" onclick="copyTerminal()">📋 Copy</button>
+          <button class="btn-secondary btn-small" onclick="clearTerminal()">🗑️ Clear</button>
+        </div>
+      </div>
+      <div id="termScreen" class="terminal-screen"></div>
+    </div>
+  </div>
+
+  <!-- Help & Developer Guide Card -->
+  <div class="card">
+    <div class="card-title">Web Serial USB Guide</div>
+    <div class="info-box">
+      <p>This demo works both with the W3C standard <code>navigator.serial</code> API and the native
+        <code>window.GeoSenseUSB</code> bridge.</p>
+      <p style="margin-top: 4px;">• <strong>Standard Web Serial:</strong>
+        <code>const port = await navigator.serial.requestPort(); await port.open({ baudRate: 115200 });</code></p>
+      <p style="margin-top: 4px;">• <strong>Incoming Data:</strong> Read from <code>port.readable</code> stream or
+        listen to <code>window.addEventListener('geosense-usb-data', (e) => console.log(e.detail.data));</code></p>
+      <p style="margin-top: 4px;">• <strong>Sending Data:</strong> Write to <code>port.writable</code> stream or call
+        <code>window.GeoSenseUSB.send("data");</code></p>
+    </div>
+  </div>
+
+  <script>
+    let activeSerialPort = null;
+    let portReader = null;
+    let portWriter = null;
+    let lineCount = 0;
+    let isPortReading = false;
+
+    const termScreen = document.getElementById('termScreen');
+    const chkAutoScroll = document.getElementById('chkAutoScroll');
+    const chkShowHex = document.getElementById('chkShowHex');
+    const connBadge = document.getElementById('connBadge');
+    const connBadgeText = document.getElementById('connBadgeText');
+    const valWebSerial = document.getElementById('valWebSerial');
+    const valBridge = document.getElementById('valBridge');
+    const valBaud = document.getElementById('valBaud');
+    const valPortInfo = document.getElementById('valPortInfo');
+    const baudSelect = document.getElementById('baudSelect');
+    const inputCmd = document.getElementById('inputCmd');
+    const lineEndingSelect = document.getElementById('lineEndingSelect');
+    const rxBytesCount = document.getElementById('rxBytesCount');
+
+    function getTime() {
+      const now = new Date();
+      return now.toTimeString().split(' ')[0] + '.' + String(now.getMilliseconds()).padStart(3, '0');
+    }
+
+    function appendLog(type, text, rawHex = '') {
+      lineCount++;
+      rxBytesCount.innerText = lineCount + ' lines';
+
+      const line = document.createElement('div');
+      line.className = 'log-line';
+
+      const timeSpan = document.createElement('span');
+      timeSpan.className = 'log-time';
+      timeSpan.innerText = '[' + getTime() + ']';
+      line.appendChild(timeSpan);
+
+      const contentSpan = document.createElement('span');
+      contentSpan.className = 'log-' + type;
+
+      let prefix = '';
+      if (type === 'rx') prefix = 'RX ← ';
+      else if (type === 'tx') prefix = 'TX → ';
+      else if (type === 'sys') prefix = 'SYS: ';
+      else if (type === 'err') prefix = 'ERR: ';
+
+      let displayText = prefix + text;
+      if (chkShowHex.checked && rawHex) {
+        displayText += ' [HEX: ' + rawHex + ']';
+      }
+      contentSpan.innerText = displayText;
+      line.appendChild(contentSpan);
+
+      termScreen.appendChild(line);
+
+      if (chkAutoScroll.checked) {
+        termScreen.scrollTop = termScreen.scrollHeight;
+      }
+    }
+
+    function toHex(str) {
+      return Array.from(new TextEncoder().encode(str))
+        .map(b => b.toString(16).padStart(2, '0').toUpperCase())
+        .join(' ');
+    }
+
+    function updateUiState(connected, driverName = '') {
+      if (connected) {
+        connBadge.className = 'badge badge-connected';
+        connBadgeText.innerText = 'Connected';
+        valPortInfo.innerText = driverName || 'Serial USB Device';
+      } else {
+        connBadge.className = 'badge badge-disconnected';
+        connBadgeText.innerText = 'Disconnected';
+        valPortInfo.innerText = 'None';
+      }
+      valBaud.innerText = baudSelect.value;
+    }
+
+    function checkCapabilities() {
+      if (navigator.serial) {
+        valWebSerial.innerText = 'Available (Polyfilled)';
+        valWebSerial.style.color = '#00e676';
+      } else {
+        valWebSerial.innerText = 'Unavailable';
+        valWebSerial.style.color = '#ff5252';
+      }
+
+      if (window.GeoSenseUSB) {
+        valBridge.innerText = 'Active (Native)';
+        valBridge.style.color = '#00e676';
+      } else {
+        valBridge.innerText = 'Not Found';
+        valBridge.style.color = '#ffb74d';
+      }
+    }
+
+    // Connect via Web Serial API (navigator.serial)
+    async function connectWebSerial() {
+      if (!navigator.serial) {
+        appendLog('err', 'navigator.serial is not supported on this browser');
+        return;
+      }
+      try {
+        appendLog('sys', 'Requesting Web Serial port...');
+        const baud = parseInt(baudSelect.value, 10);
+        activeSerialPort = await navigator.serial.requestPort();
+        await activeSerialPort.open({ baudRate: baud });
+        appendLog('sys', `Web Serial port opened @ ${baud} baud`);
+        updateUiState(true, 'Web Serial Port');
+        readFromSerialPort();
+      } catch (err) {
+        appendLog('err', 'Web Serial connection failed: ' + err.message);
+      }
+    }
+
+    // Read loop for standard Web Serial readable stream
+    async function readFromSerialPort() {
+      if (!activeSerialPort || !activeSerialPort.readable || isPortReading) return;
+      isPortReading = true;
+      try {
+        const textDecoder = new TextDecoderStream();
+        activeSerialPort.readable.pipeTo(textDecoder.writable).catch(() => { });
+        portReader = textDecoder.readable.getReader();
+
+        while (true) {
+          const { value, done } = await portReader.read();
+          if (done) break;
+          if (value) {
+            const trimmed = value.trim();
+            if (trimmed) {
+              appendLog('rx', trimmed, toHex(trimmed));
+            }
+          }
+        }
+      } catch (err) {
+        // Stream cancelled or closed
+      } finally {
+        isPortReading = false;
+        if (portReader) {
+          try { portReader.releaseLock(); } catch (e) { }
+          portReader = null;
+        }
+      }
+    }
+
+    // Connect via Direct Native Bridge
+    function connectBridge() {
+      if (window.GeoSenseUSB) {
+        const baud = parseInt(baudSelect.value, 10);
+        window.GeoSenseUSB.setBaudRate(baud);
+        window.GeoSenseUSB.connect();
+        appendLog('sys', `Triggered native bridge connect @ ${baud} baud`);
+      } else {
+        appendLog('err', 'window.GeoSenseUSB native bridge is not available');
+      }
+    }
+
+    // Disconnect
+    async function disconnectPort() {
+      if (portReader) {
+        try { await portReader.cancel(); } catch (e) { }
+        portReader = null;
+      }
+      if (activeSerialPort) {
+        try { await activeSerialPort.close(); } catch (e) { }
+        activeSerialPort = null;
+      }
+      if (window.GeoSenseUSB) {
+        window.GeoSenseUSB.disconnect();
+      }
+      updateUiState(false);
+      appendLog('sys', 'Port disconnected');
+    }
+
+    // Send data
+    async function sendData(text) {
+      if (!text) return;
+      let ending = lineEndingSelect.value;
+      if (ending === '\\r\\n') ending = '\r\n';
+      else if (ending === '\\n') ending = '\n';
+      else if (ending === '\\r') ending = '\r';
+
+      const payload = text + ending;
+
+      let sent = false;
+      if (activeSerialPort && activeSerialPort.writable) {
+        try {
+          const textEncoder = new TextEncoderStream();
+          textEncoder.readable.pipeTo(activeSerialPort.writable).catch(() => { });
+          const writer = textEncoder.writable.getWriter();
+          await writer.write(payload);
+          await writer.close();
+          sent = true;
+        } catch (e) {
+          // Fallback to bridge
+        }
+      }
+
+      if (!sent && window.GeoSenseUSB) {
+        window.GeoSenseUSB.send(payload);
+        sent = true;
+      }
+
+      if (sent) {
+        appendLog('tx', text, toHex(payload));
+      } else {
+        appendLog('err', 'Unable to send: No active connection');
+      }
+    }
+
+    function quickSend(cmd) {
+      sendData(cmd);
+    }
+
+    function runEchoTest() {
+      const testMsg = 'ECHO_' + Math.floor(Math.random() * 9000 + 1000);
+      appendLog('sys', 'Running loopback echo test with: ' + testMsg);
+      sendData(testMsg);
+    }
+
+    function clearTerminal() {
+      termScreen.innerHTML = '';
+      lineCount = 0;
+      rxBytesCount.innerText = '0 lines';
+      appendLog('sys', 'Terminal cleared');
+    }
+
+    function copyTerminal() {
+      const text = termScreen.innerText;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          appendLog('sys', 'Terminal output copied to clipboard');
+        }).catch(() => {
+          fallbackCopy(text);
+        });
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      appendLog('sys', 'Terminal output copied to clipboard');
+    }
+
+    // Event listeners
+    document.getElementById('btnWebSerialConnect').addEventListener('click', connectWebSerial);
+    document.getElementById('btnBridgeConnect').addEventListener('click', connectBridge);
+    document.getElementById('btnDisconnect').addEventListener('click', disconnectPort);
+    document.getElementById('btnSend').addEventListener('click', () => {
+      sendData(inputCmd.value);
+      inputCmd.value = '';
+    });
+
+    inputCmd.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        sendData(inputCmd.value);
+        inputCmd.value = '';
+      }
+    });
+
+    baudSelect.addEventListener('change', () => {
+      const baud = parseInt(baudSelect.value, 10);
+      valBaud.innerText = baud;
+      if (window.GeoSenseUSB) {
+        window.GeoSenseUSB.setBaudRate(baud);
+        appendLog('sys', `Baud rate changed to ${baud}`);
+      }
+    });
+
+    // Native Bridge event listeners
+    window.addEventListener('geosense-usb-connected', (e) => {
+      const driver = (e.detail && e.detail.driver) ? e.detail.driver : 'USB Device';
+      updateUiState(true, driver);
+      appendLog('sys', `Connected via ${driver}`);
+    });
+
+    window.addEventListener('geosense-usb-disconnected', () => {
+      updateUiState(false);
+      appendLog('sys', 'Device disconnected event received');
+    });
+
+    window.addEventListener('geosense-usb-data', (e) => {
+      const data = (e.detail && e.detail.data != null) ? String(e.detail.data) : '';
+      if (data && !isPortReading) {
+        appendLog('rx', data, toHex(data));
+      }
+    });
+
+    window.addEventListener('geosense-usb-error', (e) => {
+      const err = (e.detail && e.detail.error) ? e.detail.error : 'Unknown error';
+      appendLog('err', err);
+    });
+
+    // Initial setup on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      checkCapabilities();
+      appendLog('sys', 'MCU Connect Web Serial Demo initialized');
+      if (window.GeoSenseUSB && typeof window.GeoSenseUSB.isConnected === 'function') {
+        if (window.GeoSenseUSB.isConnected()) {
+          const driver = (typeof window.GeoSenseUSB.getDriverName === 'function') ? window.GeoSenseUSB.getDriverName() : 'USB Device';
+          updateUiState(true, driver);
+        }
+      }
+    });
+
+    // In case polyfill or bridge is injected slightly later
+    setTimeout(checkCapabilities, 500);
+    setTimeout(checkCapabilities, 1500);
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+# Miscellaneous / OS
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+.navigation/
+captures/
+
+# VS Code
+.vscode/
+
+# Flutter / Dart / Pub
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+**/doc/api/
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Android Build & Artifacts
+*.apk
+*.aar
+*.aab
+*.dex
+.gradle/
+**/.gradle/
+.kotlin/
+**/.kotlin/
+local.properties
+**/android/local.properties
+.externalNativeBuild/
+.cxx/
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/app/build/
+
+# iOS / macOS
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/app.flx
+**/ios/Flutter/app.zip
+**/ios/Flutter/flutter_assets/
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/.symlinks/
+**/ios/Pods/
+**/ios/Podfile.lock
+**/macos/Flutter/ephemeral/
+**/macos/Pods/
+
+# Linux / Windows desktop builds
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+
+# Secrets & Keystores
+key.properties
+*.keystore
+*.jks
+*.p12
+*.pem
+
+# Widget Preview
+.widget_preview/
